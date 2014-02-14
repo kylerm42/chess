@@ -1,223 +1,267 @@
 --- !ruby/object:Game
-player1: !ruby/object:HumanPlayer
-  name: Kyle
-  color: :red
-player2: &70352051710320 !ruby/object:HumanPlayer
-  name: Xerxes
-  color: :black
-board: &70352051709600 !ruby/object:Board
-  cursor:
-  - 3
-  - 3
-  move_stack: []
+board: &70139593053520 !ruby/object:Board
   grid:
-  - - 
-    - 
-    - 
-    - !ruby/object:Piece
+  - - !ruby/object:Rook
       position:
       - 0
-      - 3
-      color: :black
-      board: *70352051709600
-      king: false
-    - 
-    - 
-    - 
-    - !ruby/object:Piece
-      position:
       - 0
-      - 7
+      board: *70139593053520
       color: :black
-      board: *70352051709600
-      king: false
-  - - !ruby/object:Piece
+      moved: false
+    - !ruby/object:Knight
       position:
       - 1
       - 0
+      board: *70139593053520
       color: :black
-      board: *70352051709600
-      king: false
-    - 
-    - !ruby/object:Piece
-      position:
-      - 1
-      - 2
-      color: :black
-      board: *70352051709600
-      king: false
-    - 
-    - !ruby/object:Piece
-      position:
-      - 1
-      - 4
-      color: :black
-      board: *70352051709600
-      king: false
-    - 
-    - !ruby/object:Piece
-      position:
-      - 1
-      - 6
-      color: :black
-      board: *70352051709600
-      king: false
-    - 
-  - - 
-    - !ruby/object:Piece
+      moved: false
+    - !ruby/object:Bishop
       position:
       - 2
-      - 1
-      color: :red
-      board: *70352051709600
-      king: false
-    - 
-    - !ruby/object:Piece
-      position:
-      - 2
-      - 3
-      color: :black
-      board: *70352051709600
-      king: false
-    - 
-    - !ruby/object:Piece
-      position:
-      - 2
-      - 5
-      color: :black
-      board: *70352051709600
-      king: false
-    - 
-    - !ruby/object:Piece
-      position:
-      - 2
-      - 7
-      color: :black
-      board: *70352051709600
-      king: false
-  - - !ruby/object:Piece
-      position:
-      - 3
       - 0
+      board: *70139593053520
       color: :black
-      board: *70352051709600
-      king: false
+      moved: false
     - 
-    - 
-    - 
-    - !ruby/object:Piece
+    - !ruby/object:King
       position:
-      - 3
       - 4
-      color: :red
-      board: *70352051709600
-      king: false
-    - 
-    - !ruby/object:Piece
-      position:
-      - 3
-      - 6
+      - 0
+      board: *70139593053520
       color: :black
-      board: *70352051709600
-      king: false
-    - 
-  - - 
-    - !ruby/object:Piece
-      position:
-      - 4
-      - 1
-      color: :red
-      board: *70352051709600
-      king: false
-    - 
-    - !ruby/object:Piece
-      position:
-      - 4
-      - 3
-      color: :black
-      board: *70352051709600
-      king: false
-    - 
-    - !ruby/object:Piece
-      position:
-      - 4
-      - 5
-      color: :red
-      board: *70352051709600
-      king: false
-    - 
-    - 
-  - - 
-    - 
-    - !ruby/object:Piece
+      moved: false
+    - !ruby/object:Bishop
       position:
       - 5
+      - 0
+      board: *70139593053520
+      color: :black
+      moved: false
+    - !ruby/object:Knight
+      position:
+      - 6
+      - 0
+      board: *70139593053520
+      color: :black
+      moved: false
+    - !ruby/object:Rook
+      position:
+      - 7
+      - 0
+      board: *70139593053520
+      color: :black
+      moved: false
+  - - !ruby/object:Pawn
+      position:
+      - 0
+      - 1
+      board: *70139593053520
+      color: :black
+      moved: false
+    - !ruby/object:Pawn
+      position:
+      - 1
+      - 1
+      board: *70139593053520
+      color: :black
+      moved: false
+    - !ruby/object:Pawn
+      position:
       - 2
-      color: :red
-      board: *70352051709600
-      king: false
+      - 1
+      board: *70139593053520
+      color: :black
+      moved: false
+    - !ruby/object:Pawn
+      position:
+      - 3
+      - 1
+      board: *70139593053520
+      color: :black
+      moved: false
+    - 
+    - !ruby/object:Pawn
+      position:
+      - 5
+      - 1
+      board: *70139593053520
+      color: :black
+      moved: false
+    - !ruby/object:Pawn
+      position:
+      - 6
+      - 1
+      board: *70139593053520
+      color: :black
+      moved: false
+    - !ruby/object:Pawn
+      position:
+      - 7
+      - 1
+      board: *70139593053520
+      color: :black
+      moved: false
+  - - 
+    - 
+    - 
+    - 
+    - !ruby/object:Pawn
+      position:
+      - 4
+      - 2
+      board: *70139593053520
+      color: :black
+      moved: false
+    - 
+    - 
+    - 
+  - - 
+    - 
+    - 
     - 
     - 
     - 
     - 
     - 
   - - 
-    - !ruby/object:Piece
+    - 
+    - !ruby/object:Pawn
       position:
-      - 6
-      - 1
-      color: :red
-      board: *70352051709600
-      king: false
-    - 
-    - !ruby/object:Piece
-      position:
-      - 6
-      - 3
-      color: :red
-      board: *70352051709600
-      king: false
-    - 
-    - !ruby/object:Piece
-      position:
-      - 6
-      - 5
-      color: :red
-      board: *70352051709600
-      king: false
-    - 
-    - !ruby/object:Piece
-      position:
-      - 6
-      - 7
-      color: :red
-      board: *70352051709600
-      king: false
-  - - !ruby/object:Piece
-      position:
-      - 7
-      - 0
-      color: :red
-      board: *70352051709600
-      king: false
+      - 2
+      - 4
+      board: *70139593053520
+      color: :white
+      moved: false
     - 
     - 
     - 
-    - !ruby/object:Piece
+    - 
+    - !ruby/object:Queen
       position:
       - 7
       - 4
-      color: :red
-      board: *70352051709600
-      king: false
+      board: *70139593053520
+      color: :black
+      moved: false
+  - - 
     - 
-    - !ruby/object:Piece
+    - 
+    - 
+    - 
+    - 
+    - 
+    - !ruby/object:Pawn
       position:
       - 7
+      - 5
+      board: *70139593053520
+      color: :white
+      moved: false
+  - - !ruby/object:Pawn
+      position:
+      - 0
       - 6
-      color: :red
-      board: *70352051709600
-      king: false
+      board: *70139593053520
+      color: :white
+      moved: false
+    - !ruby/object:Pawn
+      position:
+      - 1
+      - 6
+      board: *70139593053520
+      color: :white
+      moved: false
     - 
-turn: *70352051710320
-message: That is an invalid move, Xerxes. Please, make a better move.
+    - !ruby/object:Pawn
+      position:
+      - 3
+      - 6
+      board: *70139593053520
+      color: :white
+      moved: false
+    - !ruby/object:Pawn
+      position:
+      - 4
+      - 6
+      board: *70139593053520
+      color: :white
+      moved: false
+    - !ruby/object:Pawn
+      position:
+      - 5
+      - 6
+      board: *70139593053520
+      color: :white
+      moved: false
+    - !ruby/object:Pawn
+      position:
+      - 6
+      - 6
+      board: *70139593053520
+      color: :white
+      moved: false
+    - 
+  - - !ruby/object:Rook
+      position:
+      - 0
+      - 7
+      board: *70139593053520
+      color: :white
+      moved: false
+    - !ruby/object:Knight
+      position:
+      - 1
+      - 7
+      board: *70139593053520
+      color: :white
+      moved: false
+    - !ruby/object:Bishop
+      position:
+      - 2
+      - 7
+      board: *70139593053520
+      color: :white
+      moved: false
+    - !ruby/object:Queen
+      position:
+      - 3
+      - 7
+      board: *70139593053520
+      color: :white
+      moved: false
+    - !ruby/object:King
+      position:
+      - 4
+      - 7
+      board: *70139593053520
+      color: :white
+      moved: false
+    - !ruby/object:Bishop
+      position:
+      - 5
+      - 7
+      board: *70139593053520
+      color: :white
+      moved: false
+    - !ruby/object:Knight
+      position:
+      - 6
+      - 7
+      board: *70139593053520
+      color: :white
+      moved: false
+    - !ruby/object:Rook
+      position:
+      - 7
+      - 7
+      board: *70139593053520
+      color: :white
+      moved: false
+  cursor:
+  - 7
+  - 4
+player1: &70139593050600 !ruby/object:HumanPlayer
+  color: :white
+player2: !ruby/object:HumanPlayer
+  color: :black
+current_player: *70139593050600

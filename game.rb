@@ -1,150 +1,217 @@
 require './board'
+require './key_input'
 require 'yaml'
-require 'io/console'
 
 class Game
-  attr_reader :player1, :player2, :board, :turn
+  attr_reader :board, :cursor, :current_player
 
-  def initialize(player1, player2)
-    @player1 = player1
-    @player2 = player2
-    @player1.color = :red
-    @player2.color = :black
-    @board = Board.new
-    @turn = @player1
-    @message = ""
+  def initialize
+    @board = Board.new_game
+    set_up_players
+  end
+
+  def next_turn
+    @current_player = (@current_player == @player1 ? @player2 : @player1)
   end
 
   def play
-
-    until won?
+    until game_over?
       begin
-        piece_pos, move_seq = get_input
-        raise InvalidMoveError if @board[piece_pos].nil? ||
-                                  @board[piece_pos].color != @turn.color ||
-                                  !@board[piece_pos].perform_moves(move_seq)
-      rescue InvalidMoveError
-        @message = "That is an invalid move, #{@turn}. Please, make a better move."
+        puts @board
+        puts "It's #{@current_player}'s turn"
+        start_position, end_position = get_move
+
+        raise MoveError.new("You selected an emtpy space, idiot.") if @board[start_position].nil?
+        raise TypeError if @board[start_position].color != @current_player.color
+
+        @board.move(start_position, end_position)
+      rescue MoveError => e
+        puts e.message
         retry
       rescue TypeError
-        print "You screwed up, #{@turn}.\nPlease, learn how to type: "
+        puts "That's not your piece!"
         retry
       end
-      switch_turn
+
+      next_turn
     end
 
-    winner = @player1 if @board.pieces.none? { |piece| piece.color == @player2.color }
-    winner = @player2 if @board.pieces.none? { |piece| piece.color == @player1.color }
-
-    puts "#{winner} wins!!!"
+    puts @board
+    end_game
   end
 
-  def display
-    divider = "".tap { |divider| 12.times { divider << "\u2193 "} }
-    puts "#{divider}\n#{@board}"
-    puts "It is #{@turn}'s turn, make a move"
+  def move_cursor(direction)
+    if direction == :up
+      if @board.cursor[1] > 0
+        @board.cursor = [@board.cursor[0], @board.cursor[1] - 1]
+      else
+        @board.cursor = [@board.cursor[0], 7]
+      end
+    elsif direction == :down
+      if @board.cursor[1] < 7
+        @board.cursor = [@board.cursor[0], @board.cursor[1] + 1]
+      else
+        @board.cursor = [@board.cursor[0], 0]
+      end
+    elsif direction == :left
+      if @board.cursor[0] > 0
+        @board.cursor = [@board.cursor[0] - 1, @board.cursor[1]]
+      else
+        @board.cursor = [7, @board.cursor[1]]
+      end
+    elsif direction == :right
+      if @board.cursor[0] < 7
+        @board.cursor = [@board.cursor[0] + 1, @board.cursor[1]]
+      else
+        @board.cursor = [0, @board.cursor[1]]
+      end
+    end
   end
 
-  private
-
-  def switch_turn
-    @turn = (@turn == @player1 ? @player2 : @player1)
+  def game_over?
+    @board.checkmate?(:white) || @board.checkmate?(:black)
   end
 
-  def won?
-    # @board.pieces.map(&:color).uniq.length == 1
-    @board.pieces.none? { |piece| piece.color == :black} ||
-    @board.pieces.none? { |piece| piece.color == :red}
+  def end_game
+    color = winner
+    puts "Checkmate! #{color.upcase} WINS!"
+  end
+
+  def winner
+    @board.checkmate?(:black) ? :white : :black
   end
 
   def get_input
+    input = read_char
+    case input
+    when "\e[A"
+      #up arrow
+      return :up
+    when "\e[B"
+      #down arrow
+      return :down
+    when "\e[D"
+      #left arrow
+      return :left
+    when "\e[C"
+      #right arrow
+      return :right
+    when " "
+      #select piece
+      return :select
+    when "q"
+      return :quit
+    when "s"
+      return :save
+    when "l"
+      return :load
+    else
+      get_input
+    end
+  end
 
-    @board.move_stack = []
-    move_stack = @board.move_stack
+  def get_move
+    player_moves = []
 
-    action = ""
-    until action == "\r"
-      system "clear"
-      self.display
-      puts @message unless @message.empty?
-      puts "Moving from: #{move_stack.first}" unless move_stack.empty?
-      puts "Moving to: #{move_stack.drop(1)}" unless move_stack.length < 2
-
-      action = STDIN.getch
-      case action
-      when "A"
-        @board.cursor[0] -= 1 if @board.cursor[0] > 0
-      when "B"
-        @board.cursor[0] += 1 if @board.cursor[0] < 7
-      when "C"
-        @board.cursor[1] += 1 if @board.cursor[1] < 7
-      when "D"
-        @board.cursor[1] -= 1 if @board.cursor[1] > 0
-      when " "
-        move_stack << @board.cursor.dup
-      when "s"
-        print "Please enter a save game name: "
-        save_game(gets.chomp)
-      when "l"
-        print "Please enter a save game name to load: "
-        load_game(gets.chomp)
-      when "q"
-        puts "#{@turn} is a quitter."
+    loop do
+      player_move = get_input
+      if player_move == :select
+        #do some selecting
+        player_moves << @board.cursor.dup
+        return player_moves if player_moves.length == 2
+      elsif player_move == :quit
+        puts "You're a quitter."
         exit
+      elsif player_move == :save
+        print "Enter file name: "
+        file_name = gets.chomp
+        File.open("#{file_name}.txt", "w") do |f|
+          f.puts self.to_yaml
+        end
+      elsif player_move == :load
+        print "Enter file name: "
+        file_name = gets.chomp
+        contents = File.read("#{file_name}.txt")
+        loaded_game = YAML::load(contents)
+        loaded_game.play
+        exit
+      else
+        #move the cursor
+        move_cursor(player_move)
+        puts @board
+        puts "It's #{@current_player}'s turn"
       end
     end
-
-    @message = ""
-    raise InvalidMoveError if move_stack.length < 2
-    [move_stack.shift, move_stack]
   end
 
-  def save_game(file_name)
-    File.open("#{file_name}.txt", "w") do |f|
-      f.puts self.to_yaml
+
+  def set_up_players
+    if rand(100) > 49
+      @player1 = HumanPlayer.new(:white)
+      @player2 = HumanPlayer.new(:black)
+      @current_player = @player1
+    else
+      @player2 = HumanPlayer.new(:white)
+      @player1 = HumanPlayer.new(:black)
+      @current_player = @player2
     end
   end
 
-  def load_game(file_name)
-    loaded_game = YAML::load(File.read("#{file_name}.txt"))
-    @player1, @player2 = loaded_game.player1, loaded_game.player2
-    @board = loaded_game.board
-    @turn = loaded_game.turn
-  end
 end
 
 class HumanPlayer
-  attr_accessor :color
+  attr_reader :color
 
-  def initialize(name = "Xerxes")
-    @name = name
+  def initialize(color)
+    @color = color
+    inform_color(color)
   end
 
-  def parse(input, game)
-    if input == "quit"
-      puts "#{@name} is a quitter."
-      exit
-    elsif input == "save"
-      print "Please enter a saved game name: "
-      return save_game(gets.chomp, game)
-    elsif input == "load"
-      print "Please enter a saved game name: "
-      return load_game(gets.chomp)
+  def inform_color(color)
+    puts "You are #{color}!"
+  end
+
+  def play_turn
+    begin
+      puts "Where would you like to go? eg a1, a4"
+      move = gets.chomp.split(", ")
+      positions = move.select { |position| position[/[a-h][1-8]/] }
+      raise TypeError.new("Invalid input.") if positions.length != 2
+    rescue TypeError => e
+      puts e.message
+      retry
     end
-    raise TypeError if input !~ /(\d,\d\s?){2,}/
-    moves = input.split(" ")
-    piece_pos = moves.shift.split(",").map(&:to_i)
-    moves.map! { |position| position.split(",").map(&:to_i) }
-    [piece_pos, moves]
+    return positions
+  end
+
+  def parse(move)
+    choices = []
+    letters = %w{a b c d e f g h}
+
+    move.each do |coord|
+      x,y = coord.split(//)
+      choices << [letters.index(x), (8 - y.to_i)]
+    end
+
+    choices
   end
 
   def to_s
-    @name
+    @color.to_s
   end
 
 end
 
-if __FILE__ == $PROGRAM_NAME
-  game = Game.new(HumanPlayer.new("Kyle"), HumanPlayer.new)
-  game.play
-end
+
+game = Game.new
+game.play
+# game.board.move([5, 6], [5, 5])
+# puts game.board
+# game.board.move([4, 1], [4, 3])
+# puts game.board
+# game.board.move([6, 6], [6, 4])
+# puts game.board
+# game.board.move([3, 0], [7, 4])
+# puts game.board
+# p game.board.checkmate?(:white)
+
