@@ -2,12 +2,44 @@ require './pieces'
 require 'colorize'
 
 class Board
-  attr_accessor :cursor
+  attr_accessor :cursor, :player_moves
   attr_reader :grid
 
+  def self.new_game(grid = Array.new(8) { Array.new(8, nil) })
+    board = Board.new(grid)
+    8.times do |idx|
+      Pawn.new(board, [idx, 1], :black)
+    end
+    8.times do |idx|
+      Pawn.new(board, [idx, 6], :white)
+    end
+
+    Rook.new(board, [0, 0], :black)
+    Rook.new(board, [7, 0], :black)
+    Rook.new(board, [0, 7], :white)
+    Rook.new(board, [7, 7], :white)
+
+    Knight.new(board, [1, 0], :black)
+    Knight.new(board, [6, 0], :black)
+    Knight.new(board, [1, 7], :white)
+    Knight.new(board, [6, 7], :white)
+
+    Bishop.new(board, [2, 0], :black)
+    Bishop.new(board, [5, 0], :black)
+    Bishop.new(board, [2, 7], :white)
+    Bishop.new(board, [5, 7], :white)
+
+    King.new(board, [4, 0], :black)
+    King.new(board, [4, 7], :white)
+
+    Queen.new(board, [3, 0], :black)
+    Queen.new(board, [3, 7], :white)
+
+    board
+  end
+
   def initialize(grid)
-    @grid = grid
-    @cursor = [0, 0]
+    @grid, @cursor, @player_moves = grid, [0, 0], []
   end
 
   def [](position)
@@ -20,61 +52,47 @@ class Board
     @grid[y][x] = piece
   end
 
-  def display
-    system "clear"
-    puts self
-  end
-
   def to_s
-    system "clear"
-    board_str = ["   a  b  c  d  e  f  g  h\n".white]
-    @grid.each_with_index do |row, row_idx|
-      row_str = "#{row_idx + 1} ".white
-      row.each_with_index do |col, col_idx|
-        if self[[col_idx, row_idx]].nil?
-          piece = "{ }" if @cursor == [col_idx, row_idx]
-          piece = "   " if @cursor != [col_idx, row_idx]
+    color = :white
+    board_str = Array.new(8) { Array.new(8, "   ") }
 
-          if row_idx % 2 == 0
-            if col_idx % 2 == 0
-              row_str += piece.black.on_white
-            else
-              row_str += piece.white.on_black
-            end
-          else
-            if col_idx % 2 == 0
-              row_str += piece.white.on_black
-            else
-              row_str += piece.black.on_white
-            end
-          end
-        else
-          piece = "{#{self[[col_idx, row_idx]]}}" if @cursor == [col_idx, row_idx]
-          piece = " #{self[[col_idx, row_idx]]} " if @cursor != [col_idx, row_idx]
-
-          if row_idx % 2 == 0
-            if col_idx % 2 == 0
-              row_str += piece.on_white.light_blue if self[[col_idx, row_idx]].color == :white
-              row_str += piece.red.on_white if self[[col_idx, row_idx]].color == :black
-            else
-              row_str += piece.on_black.light_blue if self[[col_idx, row_idx]].color == :white
-              row_str += piece.red.on_black if self[[col_idx, row_idx]].color == :black
-            end
-          else
-            if col_idx % 2 == 0
-              row_str += piece.on_black.light_blue if self[[col_idx, row_idx]].color == :white
-              row_str += piece.red.on_black if self[[col_idx, row_idx]].color == :black
-            else
-              row_str += piece.on_white.light_blue if self[[col_idx, row_idx]].color == :white
-              row_str += piece.red.on_white if self[[col_idx, row_idx]].color == :black
-            end
-          end
-        end
-      end
-
-      board_str << row_str + "\n"
+    pieces.each do |piece|
+      x, y = piece.position
+      board_str[y][x] = " #{piece} ".blue if piece.color == :white
+      board_str[y][x] = " #{piece} ".red if piece.color == :black
     end
-    board_str.join("")
+
+    @grid.each_with_index do |row, row_idx|
+      row.each_with_index do |tile, col_idx|
+        piece = board_str[row_idx][col_idx]
+
+        piece = piece.on_light_white if color == :white
+        piece = piece.on_black if color == :black
+
+        board_str[row_idx][col_idx] = piece
+
+        color = color == :white ? :black : :white unless col_idx == 7
+      end
+    end
+
+    if !@player_moves.empty?
+      selected_tile = board_str[@player_moves.first[1]][@player_moves.first[0]]
+      selected_tile = selected_tile.on_green
+      board_str[@player_moves.first[1]][@player_moves.first[0]] = selected_tile
+
+      valid_moves = self[@player_moves.first].valid_moves
+      valid_moves.each do |move|
+        x, y = move
+        board_str[y][x] = board_str[y][x].on_yellow
+      end
+    end
+
+    board_str.each_with_index { |row, idx| row << (" #{idx + 1}")}
+    board_str << (' a '..' h ').to_a
+
+    board_str[@cursor[1]][@cursor[0]] = board_str[@cursor[1]][@cursor[0]].on_cyan
+
+    board_str.map { |row| row.join("") }.join("\n")
   end
 
   def is_valid?(position)
@@ -119,13 +137,7 @@ class Board
     current_piece.position = end_position
     self[start_position] = nil
 
-    #THIS IS FOR QUEENING YOUR PAWNS
-    if current_piece.is_a?(Pawn) && end_position[1] == 0
-      current_piece = Queen.new(self, end_position, current_piece.color)
-    end
-    if current_piece.is_a?(Pawn) && end_position[1] == 7
-      current_piece = Queen.new(self, end_position, current_piece.color)
-    end
+    check_for_queen_status(current_piece, end_position)
 
     self[end_position] = current_piece
   end
@@ -141,71 +153,37 @@ class Board
 
     current_piece.position = end_position
     self[start_position] = nil
+
+    check_for_queen_status(current_piece, end_position)
+
     self[end_position] = current_piece
   end
 
-  def dup
-    new_grid = @grid.map do |row|
-      row.map do |item|
-        item.nil? ? nil : item.dup
-      end
-    end
-
-    new_board = Board.new(new_grid)
-
-    new_board.pieces.each do |piece|
-      piece.board = new_board
-    end
-
-    new_board
-  end
-
   def checkmate?(color)
-    king = king(color)
-
     pieces_for(color).all? do |piece|
       piece.valid_moves.empty?
     end
   end
 
-  def self.new_game(grid = Array.new(8) { Array.new(8, nil) })
-    board = Board.new(grid)
-    8.times do |idx|
-      Pawn.new(board, [idx, 1], :black)
+  def check_for_queen_status(current_piece, end_position)
+    if current_piece.is_a?(Pawn) &&
+       (end_position[1] == 0 ||
+       end_position[1] == 7)
+      current_piece = Queen.new(self, end_position, current_piece.color)
     end
-    8.times do |idx|
-      Pawn.new(board, [idx, 6], :white)
+  end
+
+  def dup
+    new_grid = @grid.map do |row|
+      row.map { |item| item.nil? ? nil : item.dup }
     end
 
-    Rook.new(board, [0, 0], :black)
-    Rook.new(board, [7, 0], :black)
-    Rook.new(board, [0, 7], :white)
-    Rook.new(board, [7, 7], :white)
+    new_board = Board.new(new_grid)
 
-    Knight.new(board, [1, 0], :black)
-    Knight.new(board, [6, 0], :black)
-    Knight.new(board, [1, 7], :white)
-    Knight.new(board, [6, 7], :white)
+    new_board.pieces.each { |piece| piece.board = new_board }
 
-    Bishop.new(board, [2, 0], :black)
-    Bishop.new(board, [5, 0], :black)
-    Bishop.new(board, [2, 7], :white)
-    Bishop.new(board, [5, 7], :white)
-
-    King.new(board, [4, 0], :black)
-    King.new(board, [4, 7], :white)
-
-    Queen.new(board, [3, 0], :black)
-    Queen.new(board, [3, 7], :white)
-
-    board
+    new_board
   end
 end
 
 class MoveError < ArgumentError; end
-
-if __FILE__ == $PROGRAM_NAME
-  # b = Board.new
-
-
-end
